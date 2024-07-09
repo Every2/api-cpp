@@ -1,4 +1,4 @@
-use axum::{http::StatusCode, Json};
+use axum::{http::{StatusCode, Uri}, Json};
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize)]
@@ -22,6 +22,11 @@ pub async fn create_user(Json(payload): Json<CreateUser>,) -> (StatusCode, Json<
         email: payload.email.to_string(),
         password: payload.password.to_string(),
     };
+
+    let auth_route = Uri::from_static("/auth/register");
+
+    
+
 
     (StatusCode::CREATED, Json(user))
 }
