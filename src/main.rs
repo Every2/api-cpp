@@ -1,6 +1,6 @@
 use std::env;
-use axum::{routing::post, Router};
-use real_time_app::create_user;
+use axum::{routing::{get, post}, Router};
+use real_time_app::{create_user, register};
 use sqlx::{migrate::MigrateDatabase, Sqlite};
 
 #[tokio::main]
@@ -17,7 +17,8 @@ async fn main() {
         println!("Database already exists");
     }
     let app = Router::new()
-        .route("/register", post(create_user));
+        .route("/register", get(register))
+        .route("/auth/register", post(create_user));
     let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
     axum::serve(listener, app).await.unwrap();    
 }
