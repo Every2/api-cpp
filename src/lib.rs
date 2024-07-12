@@ -1,7 +1,10 @@
+use std::env;
 use axum::{http::StatusCode, response::Html, Json};
 use serde::{Deserialize, Serialize};
+use sqlx::SqlitePool;
 
-#[derive(Serialize)]
+
+#[derive(Clone, Serialize)]
 pub struct User {
     username: String,
     email: String,
@@ -22,8 +25,20 @@ pub async fn create_user(Json(payload): Json<CreateUser>,) -> (StatusCode, Json<
         email: payload.email.to_string(),
         password: payload.password.to_string(),
     };
+
+    let json_response = user.clone();
  
-    (StatusCode::CREATED, Json(user))
+    dotenvy::dotenv().expect("create .env file in root directory");
+    let url = env::var("DATABASE_URL").expect("ENV VARIABLE DOESN'T EXIST");
+    let db_connection = SqlitePool::connect(&url).await.unwrap();
+    sqlx::query("INSERT INTO users (username, email, password) VALUES($1, $2, $3)")
+    .bind(user.username)
+    .bind(user.email)
+    .bind(user.password)
+    .execute(&db_connection)
+    .await
+    .unwrap();
+    (StatusCode::CREATED, Json(json_response))
 }
 
 pub async fn register() -> Html<&'static str> {

@@ -1,7 +1,7 @@
 use std::env;
 use axum::{routing::{get, post}, Router};
 use real_time_app::{create_user, register};
-use sqlx::{migrate::MigrateDatabase, Sqlite};
+use sqlx::{migrate::MigrateDatabase, Sqlite, SqlitePool};
 
 #[tokio::main]
 async fn main() {
@@ -10,12 +10,15 @@ async fn main() {
     if !Sqlite::database_exists(&url).await.unwrap_or(false) {
         println!("Creating Database...");
         match Sqlite::create_database(&url).await {
-            Ok(_) => println!("Created db!"),
+            Ok(_) => println!("Database created successfully!!"),
             Err(error) => panic!("error {}", error),
         }
-    } else {
-        println!("Database already exists");
     }
+    let db_connection = SqlitePool::connect(&url).await.unwrap();
+    sqlx::query("CREATE TABLE IF NOT EXISTS users (id INTEGER
+        PRIMARY KEY NOT NULL, username VARCHAR(250) NOT NULL,
+        email VARCHAR(250) NOT NULL, password VARCHAR(250) NOT NULL;")
+        .execute(&db_connection).await.unwrap();
     let app = Router::new()
         .route("/register", get(register))
         .route("/auth/register", post(create_user));
