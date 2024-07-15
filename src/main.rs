@@ -1,6 +1,6 @@
 use std::env;
 use axum::{routing::{get, post}, Router};
-use real_time_app::{create_user, register};
+use real_time_app::{create_user, login, register};
 use sqlx::{migrate::MigrateDatabase, Sqlite, SqlitePool};
 
 #[tokio::main]
@@ -17,12 +17,14 @@ async fn main() {
     let db_connection = SqlitePool::connect(&url).await.unwrap();
     sqlx::query("CREATE TABLE IF NOT EXISTS users (id INTEGER
         PRIMARY KEY NOT NULL, username VARCHAR(250) NOT NULL,
-        email VARCHAR(250) NOT NULL, password VARCHAR(250) NOT NULL;")
+        email VARCHAR(250) NOT NULL, password VARCHAR(250) NOT NULL);")
         .execute(&db_connection).await.unwrap();
     let app = Router::new()
         .route("/register", get(register))
+        .route("/login", get(login))
         .route("/auth/register", post(create_user));
     let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
-    axum::serve(listener, app).await.unwrap();    
+    println!("Server running http://localhost:3000/");
+    axum::serve(listener, app).await.unwrap();     
 }
 
